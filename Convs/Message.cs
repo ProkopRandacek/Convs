@@ -5,9 +5,17 @@ using Newtonsoft.Json;
 namespace Convs;
 
 public record Message() {
-	private string? _setTypeName;
+	public int setIDForResponse;
 
-	private static Encoding Enc = Encoding.UTF8;
+	public int IDForResponse {
+		get {
+			return this.GetHashCode();
+		} set {
+			setIDForResponse = value;
+		}
+	}
+
+	private string? _setTypeName;
 
 	public string TypeName {
 		get {
@@ -16,6 +24,8 @@ public record Message() {
 			_setTypeName = value;
 		}
 	}
+
+	private static Encoding Enc = Encoding.UTF8;
 
 	public byte[] Serialize() {
 		return Enc.GetBytes(JsonConvert.SerializeObject(this));
@@ -41,4 +51,3 @@ public record Message() {
 }
 
 public record RepMessage(string test) : Message;
-
