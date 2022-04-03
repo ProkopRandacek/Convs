@@ -11,7 +11,7 @@ public static class Program {
 		serverTunnel.OnRemoteReceived += (_, msg) => {
 			Console.WriteLine($"CLIENT: received: {msg}");
 
-			TextMessage pong = new TextMessage($"Im client and you sent: '{((TextMessage)msg).text}'");
+			TextMessage pong = new($"Im client and you sent: '{((TextMessage)msg).text}'");
 
 			pong.SetIsReplyOf(msg);
 
