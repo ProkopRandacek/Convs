@@ -51,4 +51,3 @@ public record Message {
 		return o as T ?? throw new Exception($"Failed to convert deserialized message of type {o.GetType().Name} to {typeof(T).Name}");
 	}
 }
-

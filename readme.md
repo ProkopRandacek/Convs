@@ -14,11 +14,8 @@ record TextMessage(string text) : Message;
 // Get a Stream from for example a TcpListener
 Stream s = ...
 
-// Wrap the stream around in a MessageTunnel
-MessageTunnel mt = new(s);
-
-// Wrap the MessageTunnel around in a TunnelWithResponses
-TunnelWithResponses tunnel = new(mt);
+// Wrap the Stream around in a TunnelWithResponses
+TunnelWithResponses tunnel = new(s);
 
 // Perhaps we just decided to greet the client
 tunnel.SendWithResponse(
@@ -42,11 +39,8 @@ record TextMessage(string text) : Message;
 // Get a Stream from for example a TcpListener
 Stream s = ...
 
-// Wrap the stream around in a MessageTunnel
-MessageTunnel mt = new(s);
-
-// Wrap the MessageTunnel around in a TunnelWithResponses
-TunnelWithResponses tunnel = new(mt);
+// Wrap the Stream around in a TunnelWithResponses
+TunnelWithResponses tunnel = new(s);
 
 // This time we just listen for Messages and reply to them
 tunnel.OnReceived += (_, msg) => {

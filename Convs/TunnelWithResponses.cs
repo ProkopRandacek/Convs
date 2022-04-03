@@ -17,9 +17,16 @@ public class TunnelWithResponses {
 
 	public event EventHandler<Message>? OnReceived;
 
+	public TunnelWithResponses(Stream s) {
+		_dumbTunnel = new MessageTunnel(s);
+		_timer      = new Timer(DeleteDeadCallbacks, null, 0, DeadCallbackCollectDelayMs);
+
+		_dumbTunnel.OnReceived += HandleData;
+	}
+
 	public TunnelWithResponses(IMessageTunnel tunnel) {
 		_dumbTunnel = tunnel;
-		_timer      = new Timer(_ => DeleteDeadCallbacks(), null, 0, DeadCallbackCollectDelayMs);
+		_timer      = new Timer(DeleteDeadCallbacks, null, 0, DeadCallbackCollectDelayMs);
 
 		_dumbTunnel.OnReceived += HandleData;
 	}
@@ -33,7 +40,7 @@ public class TunnelWithResponses {
 
 		_callbacks[c.MyID] = onResponse;
 		_callbackDeathTime[c.MyID] = timeNow + timeout;
-		
+
 		this.Send(c);
 	}
 
@@ -64,7 +71,7 @@ public class TunnelWithResponses {
 	/**
 	 * @brief Iterates over all callbacks and deletes ones that are too old
 	 */
-	private void DeleteDeadCallbacks() {
+	private void DeleteDeadCallbacks(object? _) {
 		long timeNow = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
 		foreach (int callbacksKey in _callbackDeathTime.Keys) {

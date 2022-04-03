@@ -1,4 +1,4 @@
-﻿using Convs;
+using Convs;
 
 public static class Program {
 	public record TextMessage(string text) : Message;
