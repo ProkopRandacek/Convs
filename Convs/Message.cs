@@ -4,28 +4,30 @@ using Newtonsoft.Json;
 
 namespace Convs;
 
-public record Message() {
-	public int setIDForResponse;
+public record Message {
+	public bool IsReply;
+	public int ReplyID; //! If this is a reply, this is the ID of the message we are replying to
 
-	public int IDForResponse {
-		get {
-			return this.GetHashCode();
-		} set {
-			setIDForResponse = value;
-		}
+	private int? _MyID;
+
+	public int MyID {
+		get => _MyID ?? GetHashCode();
+		set => _MyID = value;
 	}
 
 	private string? _setTypeName;
 
 	public string TypeName {
-		get {
-			return this.GetType().AssemblyQualifiedName ?? throw new Exception($"Failed to get Assembly Qualified Name for type {this.GetType().Name}");
-		} set {
-			_setTypeName = value;
-		}
+		get => GetType().AssemblyQualifiedName ?? throw new Exception($"Failed to get Assembly Qualified Name for type {this.GetType().Name}");
+		set => _setTypeName = value;
 	}
 
 	private static Encoding Enc = Encoding.UTF8;
+
+	public void SetIsReplyOf(Message m) {
+		this.IsReply = true;
+		this.ReplyID = m.MyID;
+	}
 
 	public byte[] Serialize() {
 		return Enc.GetBytes(JsonConvert.SerializeObject(this));
@@ -50,4 +52,3 @@ public record Message() {
 	}
 }
 
-public record RepMessage(string test) : Message;

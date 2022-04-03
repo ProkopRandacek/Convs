@@ -29,12 +29,12 @@ public class TunnelWithResponses {
 	}
 
 	public void SendWithResponse(Message c, Action<Message?> onResponse, int timeout = DefaultTimeoutMs) {
-		this.Send(c);
-
 		long timeNow = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-		_callbacks[c.setIDForResponse] = onResponse;
-		_callbackDeathTime[c.setIDForResponse] = timeNow + timeout;
+		_callbacks[c.MyID] = onResponse;
+		_callbackDeathTime[c.MyID] = timeNow + timeout;
+		
+		this.Send(c);
 	}
 
 	public void Close() {
@@ -43,15 +43,13 @@ public class TunnelWithResponses {
 	}
 
 	private void HandleData(object? _, Message d) {
-		if (d is not RepMessage rm) {
+		if (!d.IsReply) {
 			OnReceived?.Invoke(this, d);
-		} else { // it is a response
-			int key = rm.setIDForResponse;
+		} else {
+			int key = d.ReplyID;
 
-			// we don't know this callback
-			if (!_callbacks.ContainsKey(key)) {
-				throw new Exception("Received invalid callback");
-			}
+			if (!_callbacks.ContainsKey(key))
+				throw new Exception("Received unknown callback");
 
 			_callbacks.Remove(key, out Action<Message?>? callback);
 			if (callback == null)
