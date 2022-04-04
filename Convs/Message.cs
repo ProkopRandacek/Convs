@@ -6,27 +6,24 @@ namespace Convs;
 
 public record Message {
 	public bool IsReply;
-	public int ReplyID; //! If this is a reply, this is the ID of the message we are replying to
+	public long ReplyID; //! If this is a reply, this is the ID of the message we are replying to
 
-	private int? _MyID;
+	private static readonly Random Rand = new();
 
-	public int MyID {
-		get => _MyID ?? GetHashCode();
-		set => _MyID = value;
-	}
+	public readonly long ID = Rand.NextInt64();
 
 	private string? _setTypeName;
+
+	private static Encoding Enc = Encoding.UTF8;
 
 	public string TypeName {
 		get => GetType().AssemblyQualifiedName ?? throw new Exception($"Failed to get Assembly Qualified Name for type {this.GetType().Name}");
 		set => _setTypeName = value;
 	}
 
-	private static Encoding Enc = Encoding.UTF8;
-
 	public void SetIsReplyOf(Message m) {
 		this.IsReply = true;
-		this.ReplyID = m.MyID;
+		this.ReplyID = m.ID;
 	}
 
 	public byte[] Serialize() {

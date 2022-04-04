@@ -7,10 +7,10 @@ public class TunnelWithResponses {
 	private const int DeadCallbackCollectDelayMs = 2000; //! How often we delete dead callbacks
 
 	//! The callback Actions that will be called if we receive the correct response
-	private readonly ConcurrentDictionary<int, Action<Message?>> _callbacks = new(Environment.ProcessorCount*2, 100);
+	private readonly ConcurrentDictionary<long, Action<Message?>> _callbacks = new(Environment.ProcessorCount*2, 100);
 
 	//! When (Unix ms) do we delete the callback
-	private readonly ConcurrentDictionary<int, long> _callbackDeathTime = new(Environment.ProcessorCount*2, 100);
+	private readonly ConcurrentDictionary<long, long> _callbackDeathTime = new(Environment.ProcessorCount*2, 100);
 
 	private readonly IMessageTunnel _dumbTunnel;
 	private readonly Timer _timer;
@@ -38,10 +38,10 @@ public class TunnelWithResponses {
 	public void SendWithResponse(Message c, Action<Message?> onResponse, int timeout = DefaultTimeoutMs) {
 		long timeNow = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-		_callbacks[c.MyID] = onResponse;
-		_callbackDeathTime[c.MyID] = timeNow + timeout;
+		_callbacks[c.ID] = onResponse;
+		_callbackDeathTime[c.ID] = timeNow + timeout;
 
-		this.Send(c);
+		Send(c);
 	}
 
 	public void Close() {
@@ -53,7 +53,7 @@ public class TunnelWithResponses {
 		if (!d.IsReply) {
 			OnReceived?.Invoke(this, d);
 		} else {
-			int key = d.ReplyID;
+			long key = d.ReplyID;
 
 			if (!_callbacks.ContainsKey(key))
 				throw new Exception("Received unknown callback");
@@ -68,21 +68,19 @@ public class TunnelWithResponses {
 		}
 	}
 
-	/**
-	 * @brief Iterates over all callbacks and deletes ones that are too old
-	 */
+	//! Iterates over all callbacks and deletes ones that are too old
 	private void DeleteDeadCallbacks(object? _) {
 		long timeNow = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-		foreach (int callbacksKey in _callbackDeathTime.Keys) {
-			if (_callbackDeathTime[callbacksKey] < timeNow) {
-				if (_callbacks.TryRemove(callbacksKey, out Action<Message?>? callback)) {
-					if (callback != null) {
-						callback(null);
-						_callbackDeathTime.Remove(callbacksKey, out long _);
-					}
-				}
-			}
+		foreach (long callbacksKey in _callbackDeathTime.Keys) {
+			if (_callbackDeathTime[callbacksKey] >= timeNow)
+				continue;
+
+			if (!_callbacks.TryRemove(callbacksKey, out Action<Message?>? callback))
+				continue;
+
+			callback(null);
+			_callbackDeathTime.Remove(callbacksKey, out long _);
 		}
 	}
 }
